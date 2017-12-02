@@ -1,9 +1,10 @@
 export default class Level {
 	constructor() {
 
-		this.width = 100;
-		this.height = 100;
-		this.tilesize = 16;
+		this.width = 31;
+		this.height = 31;
+		this.tilesize = 32;
+        this.numrooms = 3;
 
 		// Create a blank maze
 		this.map = new Array(this.width);
@@ -25,7 +26,7 @@ export default class Level {
 		let cell = values[0];
 		this.startingpos = values[1];
 
-		for (let i=0;i<20;i++) {
+		for (let i=0;i<this.numrooms;i++) {
 			this._addRoom(Math.floor(Math.random()*2)*2+2,true);
 		}
 
@@ -77,8 +78,8 @@ export default class Level {
 
 			conflict = false;
 			// Check we won't overlap with another room if we build here
-			for (let y=startingpos.y-size;y<=startingpos.y+size;y++) {
-				for (let x=startingpos.x-size;x<=startingpos.x+size;x++) {
+			for (let y=startingpos.y-size-1;y<=startingpos.y+size+1;y++) {
+				for (let x=startingpos.x-size-1;x<=startingpos.x+size+1;x++) {
 					if (this.map[x][y] == 'v') {
 						conflict = true;
 					}
@@ -217,8 +218,6 @@ export default class Level {
 			for (var y=0;y<this.height;y++) {
 				if (this.map[x][y] == 'w') {
 					this.tilemap.putTile(0,x,y, this.layer)
-				} else if (this.map[x][y] == 'v') {
-					this.tilemap.putTile(1,x,y, this.layer)
 				}
 			}
 		}
