@@ -14,6 +14,11 @@ export default class GameState extends Phaser.State {
 	create() {
 		window.game.stage.backgroundColor = '#442200';
     window.game.physics.startSystem(Phaser.Physics.ARCADE);
+		window.game.world.setBounds(
+				0,0,
+				this.level.width * this.level.tilesize,
+				this.level.height * this.level.tilesize
+		);
 		this.level.createTilemap();
 
     
@@ -23,6 +28,7 @@ export default class GameState extends Phaser.State {
         'player'
     );
     window.game.physics.arcade.enable(this.player);
+		window.game.camera.follow(this.player);
 
 		this.cursors = window.game.input.keyboard.createCursorKeys();
 
@@ -37,23 +43,23 @@ export default class GameState extends Phaser.State {
 		if (this.cursors.left.isDown)
     {
         //  Move to the left
-        this.player.body.velocity.x = -150;
+        this.player.body.velocity.x = -550;
     }
     else if (this.cursors.right.isDown)
     {
         //  Move to the right
-        this.player.body.velocity.x = 150;
+        this.player.body.velocity.x = 550;
     }
 
 		if (this.cursors.up.isDown)
     {
         //  Move to the left
-        this.player.body.velocity.y = -150;
+        this.player.body.velocity.y = -550;
     }
     else if (this.cursors.down.isDown)
     {
         //  Move to the right
-        this.player.body.velocity.y = 150;
+        this.player.body.velocity.y = 550;
     }
   }
 }
