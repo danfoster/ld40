@@ -32,7 +32,7 @@ export default class Level {
 
 	createTilemap() {
 		this.map = window.game.add.tilemap();
-		let layer = this.map.create(
+		this.layer = this.map.create(
 			'level',
 			this.width,
 			this.height,
@@ -41,15 +41,16 @@ export default class Level {
 		)
 
 		this.map.addTilesetImage('tiles', this.ts);
+		this.map.setCollisionBetween(0,4);
 
 		for (var x=0;x<this.width;x++) {
 			for (var y=0;y<this.height;y++) {
 				if (this.walls[x][y] == 1) {
-					this.map.putTile(0,x,y, layer)
+					this.map.putTile(0,x,y, this.layer)
 				}
 			}
 		}
-		this.map.putTile(0, 2, 2, layer);
-		this.map.putTile(0, 3, 3, layer);
+		this.map.putTile(0, 2, 2, this.layer);
+		this.map.putTile(0, 3, 3, this.layer);
 	}
 }

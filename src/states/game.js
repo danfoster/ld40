@@ -13,10 +13,10 @@ export default class GameState extends Phaser.State {
 
 	create() {
 		window.game.stage.backgroundColor = '#442200';
+    window.game.physics.startSystem(Phaser.Physics.ARCADE);
 		this.level.createTilemap();
 
     
-    window.game.physics.startSystem(Phaser.Physics.ARCADE);
 		this.player = window.game.add.sprite(
         10*this.level.tilesize,
         10*this.level.tilesize,
@@ -29,6 +29,8 @@ export default class GameState extends Phaser.State {
 	}
 
   update() {
+		window.game.physics.arcade.collide(this.player,this.level.layer);
+
     this.player.body.velocity.x = 0;
     this.player.body.velocity.y = 0;
 		
