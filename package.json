@@ -1,0 +1,28 @@
+{
+  "name": "ld40",
+  "version": "1.0.0",
+  "description": "Ludum Dare 40 Game",
+  "main": "index.js",
+  "repository": "https://github.com/danfoster/ld40",
+  "dependencies": {
+    "phaser-ce": "^2.8.3"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-polyfill": "^6.26.0",
+    "browser-sync": "^2.18.13",
+    "browser-sync-webpack-plugin": "^1.2.0",
+    "eslint": "^4.12.1",
+    "expose-loader": "^0.7.4",
+    "http-server": "^0.10.0",
+    "tern-phaser": "^0.2.0",
+    "webpack": "^3.9.1"
+  },
+  "scripts": {
+    "dev": "webpack",
+    "test": "node_modules/eslint/bin/eslint.js ./src/**/**.js"
+  },
+  "author": "Dan Foster",
+  "license": "MIT"
+}
