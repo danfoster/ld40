@@ -23,8 +23,8 @@ export default class GameState extends Phaser.State {
 
     
 		this.player = window.game.add.sprite(
-        10*this.level.tilesize,
-        10*this.level.tilesize,
+        this.level.startingpos.x*this.level.tilesize,
+        this.level.startingpos.y*this.level.tilesize,
         'player'
     );
     window.game.physics.arcade.enable(this.player);
@@ -43,23 +43,23 @@ export default class GameState extends Phaser.State {
 		if (this.cursors.left.isDown)
     {
         //  Move to the left
-        this.player.body.velocity.x = -550;
+        this.player.body.velocity.x = -150;
     }
     else if (this.cursors.right.isDown)
     {
         //  Move to the right
-        this.player.body.velocity.x = 550;
+        this.player.body.velocity.x = 150;
     }
 
 		if (this.cursors.up.isDown)
     {
         //  Move to the left
-        this.player.body.velocity.y = -550;
+        this.player.body.velocity.y = -150;
     }
     else if (this.cursors.down.isDown)
     {
         //  Move to the right
-        this.player.body.velocity.y = 550;
+        this.player.body.velocity.y = 150;
     }
   }
 }
