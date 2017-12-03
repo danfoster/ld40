@@ -87,8 +87,8 @@ export default class Level {
 
 			conflict = false;
 			// Check we won't overlap with another room if we build here
-			for (let y=startingpos.y-size-1;y<=startingpos.y+size+1;y++) {
-				for (let x=startingpos.x-size-1;x<=startingpos.x+size+1;x++) {
+			for (let y=startingpos.y-size-1;y<=startingpos.y+size+3;y++) {
+				for (let x=startingpos.x-size-1;x<=startingpos.x+size+3;x++) {
 					if (this.map[x][y] == 'v') {
 						conflict = true;
 					}
