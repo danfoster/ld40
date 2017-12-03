@@ -4,6 +4,7 @@ import Phaser from 'phaser';
 
 import GameState from 'states/game';
 import DeadState from 'states/dead';
+import WinState from 'states/win';
 
 
 class Game extends Phaser.Game {
@@ -12,6 +13,7 @@ class Game extends Phaser.Game {
 
 		this.state.add('Game', GameState);
 		this.state.add('Dead', DeadState);
+		this.state.add('Win', WinState);
 		this.state.start('Game');
 
     

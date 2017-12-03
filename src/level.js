@@ -25,10 +25,16 @@ export default class Level {
 
 
 
-		let values = this._addRoom(Math.floor(Math.random()*3)*2+2,false);
+		// Add Starting Room
+		let values = this._addRoom(Math.floor(Math.random()*2)*2+2,false);
 		let cell = values[0];
 		this.startingpos = values[1];
 
+		// Add Computer Room
+		values = this._addRoom(Math.floor(Math.random()*2)*2+2,true);
+		this.dropoffpos = values[1];
+
+		// Add Empty rooms
 		for (let i=0;i<this.numrooms;i++) {
 			this._addRoom(Math.floor(Math.random()*2)*2+2,true);
 		}

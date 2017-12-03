@@ -10679,6 +10679,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_phaser__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_states_game__ = __webpack_require__(/*! states/game */ 335);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_states_dead__ = __webpack_require__(/*! states/dead */ 339);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_states_win__ = __webpack_require__(/*! states/win */ 341);
+
 
 
 
@@ -10692,6 +10694,7 @@ class Game extends __WEBPACK_IMPORTED_MODULE_2_phaser___default.a.Game {
 
 		this.state.add('Game', __WEBPACK_IMPORTED_MODULE_3_states_game__["a" /* default */]);
 		this.state.add('Dead', __WEBPACK_IMPORTED_MODULE_4_states_dead__["a" /* default */]);
+		this.state.add('Win', __WEBPACK_IMPORTED_MODULE_5_states_win__["a" /* default */]);
 		this.state.start('Game');
 	}
 
@@ -118121,159 +118124,191 @@ process.umask = function() { return 0; };
 
 
 class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
-    preload() {
-        window.game.load.spritesheet('player', 'assets/player.png', 16, 24);
-        window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
-        window.game.load.spritesheet('pickup', 'assets/pickup.png', 9, 9);
-        window.game.load.bitmapFont('font4', 'assets/font4.png', 'assets/font4.fnt');
+				preload() {
+								window.game.load.spritesheet('player', 'assets/player.png', 16, 24);
+								window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
+								window.game.load.spritesheet('pickup', 'assets/pickup.png', 9, 9);
+								window.game.load.spritesheet('dropoff', 'assets/dropoff.png', 48, 75);
+								window.game.load.bitmapFont('font4', 'assets/font4.png', 'assets/font4.fnt');
 
-        this.level = new __WEBPACK_IMPORTED_MODULE_1_level__["a" /* default */]();
-        this.playing = true;
-    }
+								this.level = new __WEBPACK_IMPORTED_MODULE_1_level__["a" /* default */]();
+								this.playing = true;
+				}
 
-    create() {
-        window.game.stage.backgroundColor = '#000000';
-        window.game.physics.startSystem(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Physics.ARCADE);
-        window.game.world.setBounds(0, 0, this.level.width * this.level.tilesize, this.level.height * this.level.tilesize);
-        this.level.createTilemap();
-        this.carrying = 0;
+				create() {
+								window.game.stage.backgroundColor = '#000000';
+								window.game.physics.startSystem(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Physics.ARCADE);
+								window.game.world.setBounds(0, 0, this.level.width * this.level.tilesize, this.level.height * this.level.tilesize);
+								this.level.createTilemap();
+								this.carrying = 0;
 
-        this.pickups = [];
-        for (let i = 0; i < 10; i++) {
-            let s = new __WEBPACK_IMPORTED_MODULE_3_pickup__["a" /* default */]({
-                game: window.game,
-                level: this.level
-            });
-            window.game.add.existing(s);
-            this.pickups.push(s);
-        }
+								this.pickups = [];
+								for (let i = 0; i < 10; i++) {
+												let s = new __WEBPACK_IMPORTED_MODULE_3_pickup__["a" /* default */]({
+																game: window.game,
+																level: this.level
+												});
+												window.game.add.existing(s);
+												this.pickups.push(s);
+								}
 
-        this.sentries = [];
-        for (let i = 0; i < 10; i++) {
-            let s = new __WEBPACK_IMPORTED_MODULE_2_sentry__["a" /* default */]({
-                game: window.game,
-                level: this.level
-            });
-            window.game.add.existing(s);
-            this.sentries.push(s);
-        }
+								console.log("dropoffpos: ", this.level.dropoffpos);
+								this.dropoff = window.game.add.sprite(this.level.dropoffpos.x * this.level.tilesize + this.level.tilesize / 2, this.level.dropoffpos.y * this.level.tilesize + this.level.tilesize / 2, 'dropoff');
+								this.dropoff.anchor.setTo(0.5);
+								window.game.physics.arcade.enable(this.dropoff);
 
-        this.player = window.game.add.sprite(this.level.startingpos.x * this.level.tilesize, this.level.startingpos.y * this.level.tilesize, 'player');
-        this.player.animations.add('down', [0, 1, 2], 10, true);
-        this.player.animations.add('up', [9, 10, 11], 10, true);
-        this.player.animations.add('left', [6, 7, 8], 10, true);
-        this.player.animations.add('right', [3, 4, 5], 10, true);
-        window.game.physics.arcade.enable(this.player);
-        this.player.body.setSize(16, 10, 0, 14);
-        window.game.camera.follow(this.player);
+								this.sentries = [];
+								for (let i = 0; i < 10; i++) {
+												let s = new __WEBPACK_IMPORTED_MODULE_2_sentry__["a" /* default */]({
+																game: window.game,
+																level: this.level
+												});
+												window.game.add.existing(s);
+												this.sentries.push(s);
+								}
 
-        this.cursors = window.game.input.keyboard.createCursorKeys();
-        this.spacebar = window.game.input.keyboard.addKey(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Keyboard.SPACEBAR);
-        this.spacebar.onDown.add(this.drop, this, 0);
+								this.player = window.game.add.sprite(this.level.startingpos.x * this.level.tilesize, this.level.startingpos.y * this.level.tilesize, 'player');
+								this.player.animations.add('down', [0, 1, 2], 10, true);
+								this.player.animations.add('up', [9, 10, 11], 10, true);
+								this.player.animations.add('left', [6, 7, 8], 10, true);
+								this.player.animations.add('right', [3, 4, 5], 10, true);
+								window.game.physics.arcade.enable(this.player);
+								this.player.body.setSize(16, 10, 0, 14);
+								window.game.camera.follow(this.player);
 
-        this.hud = new __WEBPACK_IMPORTED_MODULE_4_hud__["a" /* default */](window.game);
-    }
+								this.cursors = window.game.input.keyboard.createCursorKeys();
+								this.spacebar = window.game.input.keyboard.addKey(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Keyboard.SPACEBAR);
+								this.spacebar.onDown.add(this.drop, this, 0);
 
-    drop() {
-        if (this.carrying > 0) {
-            this.carrying--;
-            for (let i = 0; i < 5; i++) {
-                let sid = Math.floor(Math.random() * this.sentries.length);
-                let s = this.sentries[sid];
-                this.sentries.splice[(sid, 1)];
-                s.destroy();
-            }
-            let p = new __WEBPACK_IMPORTED_MODULE_3_pickup__["a" /* default */]({
-                game: window.game,
-                level: this.level
-            });
-            window.game.add.existing(p);
-            this.pickups.push(p);
-            this.hud.remain.set(this.pickups.length);
-            this.hud.carrying.set(this.carrying);
-        }
-    }
+								this.hud = new __WEBPACK_IMPORTED_MODULE_4_hud__["a" /* default */](window.game);
+				}
 
-    update() {
-        window.game.physics.arcade.collide(this.player, this.level.layer);
-        window.game.physics.arcade.collide(this.sentry, this.level.layer);
+				drop() {
+								if (this.carrying > 0) {
+												this.carrying--;
+												for (let i = 0; i < 5; i++) {
+																let sid = Math.floor(Math.random() * this.sentries.length);
+																let s = this.sentries[sid];
+																this.sentries.splice[(sid, 1)];
+																s.destroy();
+												}
+												let p = new __WEBPACK_IMPORTED_MODULE_3_pickup__["a" /* default */]({
+																game: window.game,
+																level: this.level
+												});
+												window.game.add.existing(p);
+												this.pickups.push(p);
+												this.hud.remain.set(this.pickups.length);
+												this.hud.carrying.set(this.carrying);
+								}
+				}
 
-        if (this.playing) {
-            this.player.body.velocity.x = 0;
-            this.player.body.velocity.y = 0;
-            let moving = false;
+				update() {
+								window.game.physics.arcade.collide(this.player, this.level.layer);
+								window.game.physics.arcade.collide(this.sentry, this.level.layer);
 
-            // Are we being hit by an enemy?
-            if (window.game.physics.arcade.overlap(this.player, this.sentries)) {
-                this.hud.healthbar.health -= 5;
-            }
+								if (this.playing) {
+												this.player.body.velocity.x = 0;
+												this.player.body.velocity.y = 0;
+												let moving = false;
 
-            // Are we dead?
-            if (this.hud.healthbar.health == 0) {
-                this.playing = false;
-                this.game.camera.onFadeComplete.addOnce(this._die, this);
-                this.game.camera.fade('#000000');
-            }
+												// Are we being hit by an enemy?
+												if (window.game.physics.arcade.overlap(this.player, this.sentries)) {
+																this.hud.healthbar.health -= 5;
+												}
 
-            // Are we picking up an item?
-            for (let i = 0; i < this.pickups.length; i++) {
-                if (window.game.physics.arcade.overlap(this.player, this.pickups[i])) {
-                    let s = this.pickups[i];
-                    this.pickups.splice(i, 1);
-                    s.destroy();
-                    this.hud.remain.set(this.pickups.length);
-                    this.carrying += 1;
-                    this.hud.carrying.set(this.carrying);
-                    for (let i = 0; i < 5; i++) {
-                        let s = new __WEBPACK_IMPORTED_MODULE_2_sentry__["a" /* default */]({
-                            game: window.game,
-                            level: this.level
-                        });
-                        window.game.add.existing(s);
-                        this.sentries.push(s);
-                    }
-                }
-            }
+												// Are we dead?
+												if (this.hud.healthbar.health == 0) {
+																this.playing = false;
+																this.game.camera.onFadeComplete.addOnce(this._die, this);
+																this.game.camera.fade('#000000');
+												}
 
-            // Keyboard movement
-            if (this.cursors.left.isDown) {
-                //  Move to the left
-                this.player.body.velocity.x = -150;
-                this.player.animations.play('left');
-                moving = true;
-            } else if (this.cursors.right.isDown) {
-                //  Move to the right
-                this.player.body.velocity.x = 150;
-                this.player.animations.play('right');
-                moving = true;
-            }
+												// Are we picking up an item?
+												for (let i = 0; i < this.pickups.length; i++) {
+																if (window.game.physics.arcade.overlap(this.player, this.pickups[i])) {
+																				let s = this.pickups[i];
+																				this.pickups.splice(i, 1);
+																				s.destroy();
+																				this.hud.remain.set(this.pickups.length);
+																				this.carrying += 1;
+																				this.hud.carrying.set(this.carrying);
+																				for (let i = 0; i < 5; i++) {
+																								let s = new __WEBPACK_IMPORTED_MODULE_2_sentry__["a" /* default */]({
+																												game: window.game,
+																												level: this.level
+																								});
+																								window.game.add.existing(s);
+																								this.sentries.push(s);
+																				}
+																}
+												}
 
-            if (this.cursors.up.isDown) {
-                //  Move to the left
-                this.player.body.velocity.y = -150;
-                this.player.animations.play('up');
-                moving = true;
-            } else if (this.cursors.down.isDown) {
-                //  Move to the right
-                this.player.body.velocity.y = 150;
-                this.player.animations.play('down');
-                moving = true;
-            }
+												// Are we dropping off items?
+												if (window.game.physics.arcade.overlap(this.player, this.dropoff)) {
 
-            if (!moving) {
-                this.player.animations.stop();
-                this.player.frame = 1;
-            }
-        }
-    }
+																if (this.carrying > 0) {
+																				for (let i = 0; i < 5 * this.carrying; i++) {
+																								let sid = Math.floor(Math.random() * this.sentries.length);
+																								let s = this.sentries[sid];
+																								this.sentries.splice[(sid, 1)];
+																								s.destroy();
+																				}
+																}
+																this.carrying = 0;
+																this.hud.carrying.set(this.carrying);
 
-    _die() {
-        this.game.state.start('Dead');
-    }
+																// Check to see if we've won
+																if (this.pickups.length == 0) {
+																				this.playing = false;
+																				this.game.camera.onFadeComplete.addOnce(this._win, this);
+																				this.game.camera.fade('#000000');
+																}
+												}
 
-    render() {
-        //        game.debug.body(this.player);
-    }
+												// Keyboard movement
+												if (this.cursors.left.isDown) {
+																//  Move to the left
+																this.player.body.velocity.x = -150;
+																this.player.animations.play('left');
+																moving = true;
+												} else if (this.cursors.right.isDown) {
+																//  Move to the right
+																this.player.body.velocity.x = 150;
+																this.player.animations.play('right');
+																moving = true;
+												}
+
+												if (this.cursors.up.isDown) {
+																//  Move to the left
+																this.player.body.velocity.y = -150;
+																this.player.animations.play('up');
+																moving = true;
+												} else if (this.cursors.down.isDown) {
+																//  Move to the right
+																this.player.body.velocity.y = 150;
+																this.player.animations.play('down');
+																moving = true;
+												}
+
+												if (!moving) {
+																this.player.animations.stop();
+																this.player.frame = 1;
+												}
+								}
+				}
+
+				_die() {
+								this.game.state.start('Dead');
+				}
+
+				_win() {
+								this.game.state.start('Win');
+				}
+
+				render() {
+								//        game.debug.body(this.player);
+				}
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = GameState;
 
@@ -118313,10 +118348,16 @@ class Level {
 			}
 		}
 
-		let values = this._addRoom(Math.floor(Math.random() * 3) * 2 + 2, false);
+		// Add Starting Room
+		let values = this._addRoom(Math.floor(Math.random() * 2) * 2 + 2, false);
 		let cell = values[0];
 		this.startingpos = values[1];
 
+		// Add Computer Room
+		values = this._addRoom(Math.floor(Math.random() * 2) * 2 + 2, true);
+		this.dropoffpos = values[1];
+
+		// Add Empty rooms
 		for (let i = 0; i < this.numrooms; i++) {
 			this._addRoom(Math.floor(Math.random() * 2) * 2 + 2, true);
 		}
@@ -118961,6 +119002,48 @@ class Pickup extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Pickup;
+
+
+/***/ }),
+/* 341 */
+/*!***************************!*\
+  !*** ./src/states/win.js ***!
+  \***************************/
+/*! exports provided: default */
+/*! exports used: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser__ = __webpack_require__(/*! phaser */ 90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_phaser__);
+
+
+class WinState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
+	preload() {
+		window.game.load.bitmapFont('font1', 'assets/font1.png', 'assets/font1.fnt');
+		window.game.load.bitmapFont('font2', 'assets/font2.png', 'assets/font2.fnt');
+		window.game.load.bitmapFont('font3', 'assets/font3.png', 'assets/font3.fnt');
+	}
+
+	create() {
+		window.game.stage.backgroundColor = '#000000';
+		this.title = game.add.bitmapText(this.game.width / 2, this.game.height * 0.25, 'font1', "You Won!", 96);
+		this.title.anchor.setTo(0.5, 0.5);
+
+		this.text1 = game.add.bitmapText(this.game.width / 2, this.game.height * 0.5, 'font3', 'Press Y to play again', 40);
+		this.text1.anchor.setTo(0.5, 0.5);
+
+		window.game.input.keyboard.onPressCallback = function (e) {
+			console.log("Play again");
+			this.game.camera.fade('#000000');
+			window.game.state.start('Game');
+			window.game.input.keyboard.onPressCallback = null;
+		};
+	}
+
+	update() {}
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = WinState;
 
 
 /***/ })
