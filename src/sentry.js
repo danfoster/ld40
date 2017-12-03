@@ -27,6 +27,7 @@ export default class Sentry extends Phaser.Sprite {
 		this.prev_tilex = Math.floor(this.x/this.level.tilesize);
 		this.prev_tiley = Math.floor(this.y/this.level.tilesize);
 		this.v = 100;
+		console.log(this.v);
 		let newdir = this._pickDirection(this.prev_tilex,this.prev_tiley);
 		this.body.velocity.x = newdir[0];
 		this.body.velocity.y = newdir[1];

@@ -2,12 +2,15 @@ import Phaser from 'phaser';
 
 import Level from 'level';
 import Sentry from 'sentry';
+import Pickup from 'pickup';
 import HUD from 'hud';
 
 export default class GameState extends Phaser.State {
 	preload() {
 		window.game.load.spritesheet('player', 'assets/player.png', 16, 24);
 		window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
+		window.game.load.spritesheet('pickup', 'assets/pickup.png', 9, 9);
+		window.game.load.bitmapFont('font4', 'assets/font4.png', 'assets/font4.fnt');
 
 		this.level = new Level;
         this.playing = true;
@@ -24,7 +27,27 @@ export default class GameState extends Phaser.State {
 				this.level.height * this.level.tilesize
 		);
 		this.level.createTilemap();
+		this.carrying = 0;
 
+        this.pickups = []
+        for (let i=0; i<10; i++) {
+            let s = new Pickup({
+                game: window.game,
+                level: this.level,
+            });
+            window.game.add.existing(s);
+            this.pickups.push(s);
+        }
+
+		this.sentries = []
+        for (let i=0; i<10; i++) {
+            let s = new Sentry({
+                game: window.game,
+                level: this.level,
+            });
+            window.game.add.existing(s);
+            this.sentries.push(s);
+        }
     
 		this.player = window.game.add.sprite(
             this.level.startingpos.x*this.level.tilesize,
@@ -41,19 +64,34 @@ export default class GameState extends Phaser.State {
 
 
 		this.cursors = window.game.input.keyboard.createCursorKeys();
+		this.spacebar = window.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+		this.spacebar.onDown.add(this.drop, this, 0);
 
-        this.sentries = []
-        for (let i=0; i<10; i++) {
-            let s = new Sentry({
-                game: window.game,
-                level: this.level,
-            });
-            window.game.add.existing(s);
-            this.sentries.push(s);
-        }
+        
+
 
         this.hud = new HUD(window.game);
 
+	}
+
+	drop() {
+		if ( this.carrying > 0) {
+			this.carrying--;
+			for (let i=0; i<5; i++) {
+				let sid = Math.floor(Math.random()*this.sentries.length);
+				let s = this.sentries[sid];
+				this.sentries.splice[sid,1];
+				s.destroy();
+			}
+            let p = new Pickup({
+                game: window.game,
+                level: this.level,
+            });
+            window.game.add.existing(p);
+            this.pickups.push(p);
+			this.hud.remain.set(this.pickups.length);
+			this.hud.carrying.set(this.carrying);
+		}
 	}
 
     update() {
@@ -65,15 +103,39 @@ export default class GameState extends Phaser.State {
             this.player.body.velocity.y = 0;
             let moving = false;
 
+			// Are we being hit by an enemy?
             if (window.game.physics.arcade.overlap(this.player,this.sentries)) {
                 this.hud.healthbar.health -= 5;
             }
+
+			// Are we dead?
             if (this.hud.healthbar.health == 0) {
                 this.playing = false;
 				this.game.camera.onFadeComplete.addOnce(this._die,this);
                 this.game.camera.fade('#000000');
             }
+
+			// Are we picking up an item?
+			for (let i=0;i<this.pickups.length;i++) {
+				if ( window.game.physics.arcade.overlap(this.player,this.pickups[i])) {
+					let s = this.pickups[i];
+					this.pickups.splice(i,1);
+					s.destroy();
+					this.hud.remain.set(this.pickups.length);
+					this.carrying += 1;
+					this.hud.carrying.set(this.carrying);
+					for (let i=0; i<5; i++) {
+						let s = new Sentry({
+							game: window.game,
+							level: this.level,
+						});
+						window.game.add.existing(s);
+						this.sentries.push(s);
+					}
+				}
+			}
                 
+			// Keyboard movement
             if (this.cursors.left.isDown)
             {
                 //  Move to the left
@@ -108,6 +170,7 @@ export default class GameState extends Phaser.State {
                 this.player.animations.stop();
                 this.player.frame = 1;
             }
+
         }
     }
 
