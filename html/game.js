@@ -118115,7 +118115,7 @@ process.umask = function() { return 0; };
 
 class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
     preload() {
-        window.game.load.image('player', 'assets/player.png');
+        window.game.load.spritesheet('player', 'assets/player.png', 16, 16);
 
         this.level = new __WEBPACK_IMPORTED_MODULE_1_level__["a" /* default */]();
     }
@@ -118127,8 +118127,11 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
         this.level.createTilemap();
 
         this.player = window.game.add.sprite(this.level.startingpos.x * this.level.tilesize, this.level.startingpos.y * this.level.tilesize, 'player');
+        this.player.animations.add('down', [0, 1, 2], 10, true);
+        this.player.animations.add('up', [0, 1, 2], 10, true);
+        this.player.animations.add('left', [0, 1, 2], 10, true);
+        this.player.animations.add('right', [0, 1, 2], 10, true);
         window.game.physics.arcade.enable(this.player);
-        this.player.body.bounce = 1;
         window.game.camera.follow(this.player);
 
         this.cursors = window.game.input.keyboard.createCursorKeys();
@@ -118152,21 +118155,35 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
 
         this.player.body.velocity.x = 0;
         this.player.body.velocity.y = 0;
+        let moving = false;
 
         if (this.cursors.left.isDown) {
             //  Move to the left
             this.player.body.velocity.x = -150;
+            this.player.animations.play('left');
+            moving = true;
         } else if (this.cursors.right.isDown) {
             //  Move to the right
             this.player.body.velocity.x = 150;
+            this.player.animations.play('right');
+            moving = true;
         }
 
         if (this.cursors.up.isDown) {
             //  Move to the left
             this.player.body.velocity.y = -150;
+            this.player.animations.play('left');
+            moving = true;
         } else if (this.cursors.down.isDown) {
             //  Move to the right
             this.player.body.velocity.y = 150;
+            this.player.animations.play('right');
+            moving = true;
+        }
+
+        if (!moving) {
+            this.player.animations.stop();
+            this.player.frame = 1;
         }
     }
 }
