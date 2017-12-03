@@ -4,11 +4,15 @@ export default class Sentry extends Phaser.Sprite {
 	constructor({ game, asset, level}) {
 		let x = Math.floor(Math.random()*(level.width-2))+1;
 		let y = Math.floor(Math.random()*(level.height-2))+1;
-		console.log("want to start at",x,y);
-		while ( level.tilemap.getTile(x,y) != null ) {
+		let count = 0;
+		while ( level.tilemap.getTile(x,y).index != 1 ) {
 			x = Math.floor(Math.random()*(level.width-2))+1;
 			y = Math.floor(Math.random()*(level.height-2))+1;
-			console.log("trying again at",x,y);
+			count++;
+			if (count > 10) {
+				console.log("ERROR: Giving up finding space for enemy");
+				return(null);
+			}
 		}
 
 		x = (x*level.tilesize)+(level.tilesize/2);
@@ -52,7 +56,7 @@ export default class Sentry extends Phaser.Sprite {
 		let last_resort = [];
 		let d = [];
 		let layer = this.level.tilemap.getLayer('level');
-		if ( this.level.tilemap.getTile(tilex,tiley-1,layer) == null ) {
+		if ( this.level.tilemap.getTile(tilex,tiley-1,layer).index ==  1) {
 			d = [0,-1*this.v];
 			if (this.body.velocity.y == this.v) {
 				last_resort = d
@@ -60,7 +64,7 @@ export default class Sentry extends Phaser.Sprite {
 				valid_directions.push(d);
 			}
 		}
-		if ( this.level.tilemap.getTile(tilex,tiley+1,layer) == null ) {
+		if ( this.level.tilemap.getTile(tilex,tiley+1,layer).index == 1 ) {
 			d = [0,this.v];
 			if (this.body.velocity.y == -1 * this.v) {
 				last_resort = d
@@ -68,7 +72,7 @@ export default class Sentry extends Phaser.Sprite {
 				valid_directions.push(d);
 			}
 		}
-		if ( this.level.tilemap.getTile(tilex-1,tiley,layer) == null ) {
+		if ( this.level.tilemap.getTile(tilex-1,tiley,layer).index == 1 ) {
 			d = [-1*this.v,0];
 			if (this.body.velocity.x == this.v) {
 				last_resort = d
@@ -76,7 +80,7 @@ export default class Sentry extends Phaser.Sprite {
 				valid_directions.push(d);
 			}
 		}
-		if ( this.level.tilemap.getTile(tilex+1,tiley,layer) == null ) {
+		if ( this.level.tilemap.getTile(tilex+1,tiley,layer).index == 1 ) {
 			d = [this.v,0];
 			if (this.body.velocity.x == -1 * this.v) {
 				last_resort = d

@@ -118128,6 +118128,7 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
 
         this.player = window.game.add.sprite(this.level.startingpos.x * this.level.tilesize, this.level.startingpos.y * this.level.tilesize, 'player');
         window.game.physics.arcade.enable(this.player);
+        this.player.body.bounce = 1;
         window.game.camera.follow(this.player);
 
         this.cursors = window.game.input.keyboard.createCursorKeys();
@@ -118145,8 +118146,8 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
     }
 
     update() {
-        //		window.game.physics.arcade.collide(this.player,this.level.layer);
-        window.game.physics.arcade.collide(this.player, this.sentry);
+        window.game.physics.arcade.collide(this.player, this.level.layer);
+        window.game.physics.arcade.collide(this.player, this.sentries);
         window.game.physics.arcade.collide(this.sentry, this.level.layer);
 
         this.player.body.velocity.x = 0;
@@ -118189,6 +118190,8 @@ class Level {
 		this.height = 31;
 		this.tilesize = 32;
 		this.numrooms = 3;
+
+		window.game.load.image('tiles', 'assets/tiles.png');
 
 		// Create a blank maze
 		this.map = new Array(this.width);
@@ -118234,8 +118237,6 @@ class Level {
 				this._addWalls(walllist, cell);
 			}
 		}
-
-		this._createTileSet();
 	}
 
 	_addRoom(size, makedoorway) {
@@ -118290,38 +118291,53 @@ class Level {
 			}
 		}
 		// Pick a doorway
-		let side = Math.floor(Math.random() * 3);
 		let cell = {};
-		switch (side) {
-			case 0:
-				cell.x = startingpos.x - size;
-				cell.y = startingpos.y;
-				if (makedoorway == true) {
-					this.map[cell.x - 1][cell.y] = 'v';
-				}
-				break;
-			case 1:
-				cell.x = startingpos.x;
-				cell.y = startingpos.y - size;
-				if (makedoorway == true) {
-					this.map[cell.x][cell.y - 1] = 'v';
-				}
-				break;
-			case 2:
-				cell.x = startingpos.x + size;
-				cell.y = startingpos.y;
-				if (makedoorway == true) {
-					this.map[cell.x + 1][cell.y] = 'v';
-				}
-				break;
-			case 3:
-			default:
-				cell.x = startingpos.x;
-				cell.y = startingpos.y + size;
-				if (makedoorway == true) {
-					this.map[cell.x][cell.y + 1] = 'v';
-				}
-				break;
+		let safe = false;
+		while (!safe) {
+			let side = Math.floor(Math.random() * 3);
+			switch (side) {
+				case 0:
+					cell.x = startingpos.x - size;
+					cell.y = startingpos.y;
+					if (this.map[cell.x - 2][cell.y] != 'v') {
+						safe = true;
+						if (makedoorway == true) {
+							this.map[cell.x - 1][cell.y] = 'v';
+						}
+					}
+					break;
+				case 1:
+					cell.x = startingpos.x;
+					cell.y = startingpos.y - size;
+					if (this.map[cell.x][cell.y - 2] != 'v') {
+						safe = true;
+						if (makedoorway == true) {
+							this.map[cell.x][cell.y - 1] = 'v';
+						}
+					}
+					break;
+				case 2:
+					cell.x = startingpos.x + size;
+					cell.y = startingpos.y;
+					if (this.map[cell.x + 2][cell.y] != 'v') {
+						safe = true;
+						if (makedoorway == true) {
+							this.map[cell.x + 1][cell.y] = 'v';
+						}
+					}
+					break;
+				case 3:
+				default:
+					cell.x = startingpos.x;
+					cell.y = startingpos.y + size;
+					if (this.map[cell.x][cell.y + 2] != 'v') {
+						safe = true;
+						if (makedoorway == true) {
+							this.map[cell.x][cell.y + 1] = 'v';
+						}
+					}
+					break;
+			}
 		}
 		return [cell, startingpos];
 	}
@@ -118374,23 +118390,113 @@ class Level {
 		}
 	}
 
-	_createTileSet() {
-		this.ts = window.game.make.bitmapData(2 * this.tilesize, 2 * this.tilesize);
-		this.ts.rect(0, 0, this.tilesize, this.tilesize, '#0000ff');
-		this.ts.rect(this.tilesize, 0, this.tilesize, this.tilesize * 2, '#00ff00');
-	}
-
 	createTilemap() {
 		this.tilemap = window.game.add.tilemap();
 		this.layer = this.tilemap.create('level', this.width, this.height, this.tilesize, this.tilesize);
 
-		this.tilemap.addTilesetImage('tiles', this.ts);
+		this.tilemap.addTilesetImage('tiles');
 		this.tilemap.setCollisionBetween(0, 0);
+		this.tilemap.setCollisionBetween(2, 16);
+		this.tilemap.setCollision(50);
 
 		for (var x = 0; x < this.width; x++) {
 			for (var y = 0; y < this.height; y++) {
 				if (this.map[x][y] == 'w') {
-					this.tilemap.putTile(0, x, y, this.layer);
+					let pattern = '';
+					for (let iy = y - 1; iy <= y + 1; iy++) {
+						for (let ix = x - 1; ix <= x + 1; ix++) {
+							if (iy < 0 || ix < 0 || ix >= this.width || iy >= this.height) {
+								pattern += 'v';
+							} else {
+								pattern += this.map[ix][iy];
+							}
+						}
+					}
+					switch (pattern) {
+						case "vvvwwwvvv":
+						case "vvwwwwvvv":
+						case "wvvwwwvvv":
+						case "wvwwwwvvv":
+						case "vvwwwwvvw":
+						case "vvvwwwwvv":
+						case "vvwwwwwvv":
+						case "vvvwwwvvw":
+						case "vvvwwwwvw":
+						case "wvvwwwwvw":
+						case "wvvwwwwvv":
+						case "wvwwwwwvv":
+						case "vvwwwwwvw":
+						case "wvwwwwvvw":
+						case "wvvwwwvvw":
+						case "wvwwwwwvw":
+							this.tilemap.putTile(2, x, y, this.layer);
+							break;
+						case "vwvwwwvvv":
+							this.tilemap.putTile(3, x, y, this.layer);
+							break;
+						case "vwvvwvvwv":
+						case "wwvvwvvwv":
+						case "vwwvwvvwv":
+						case "wwwvwvwwv":
+						case "vwvvwvvww":
+						case "vwvvwvwwv":
+						case "wwvvwvvww":
+						case "vwwvwvwww":
+						case "vwvvwvwww":
+						case "wwwvwvvwv":
+						case "wwvvwvwww":
+						case "vwwvwvvww":
+						case "wwvvwvwwv":
+						case "wwwvwvvww":
+						case "vwwvwvwwv":
+						case "wwwvwvwww":
+							this.tilemap.putTile(4, x, y, this.layer);
+							break;
+						case "vwvvwvvvv":
+							this.tilemap.putTile(5, x, y, this.layer);
+							break;
+						case "vwvvwwvvv":
+							this.tilemap.putTile(6, x, y, this.layer);
+							break;
+						case "vvvvwwvwv":
+							this.tilemap.putTile(7, x, y, this.layer);
+							break;
+						case "vvvvwwvvv":
+							this.tilemap.putTile(8, x, y, this.layer);
+							break;
+						case "vvvwwvvvv":
+							this.tilemap.putTile(9, x, y, this.layer);
+							break;
+						case "vvvwwwvwv":
+							this.tilemap.putTile(10, x, y, this.layer);
+							break;
+						case "vvvwwvvwv":
+							this.tilemap.putTile(11, x, y, this.layer);
+							break;
+						case "vwvwwvvvv":
+							this.tilemap.putTile(12, x, y, this.layer);
+							break;
+						case "vvvvwvvwv":
+						case "vvvvwvwww":
+						case "vvvvwvwwv":
+						case "vvvvwvvww":
+							this.tilemap.putTile(13, x, y, this.layer);
+							break;
+						case "vwvvwwvwv":
+							this.tilemap.putTile(14, x, y, this.layer);
+							break;
+						case "vwvwwvvwv":
+							this.tilemap.putTile(15, x, y, this.layer);
+							break;
+						case "vwvwwwvwv":
+							this.tilemap.putTile(16, x, y, this.layer);
+							break;
+						default:
+							this.tilemap.putTile(50, x, y, this.layer);
+							break;
+					}
+				} else {
+					this.tilemap.putTile(1, x, y, this.layer);
 				}
 			}
 		}
@@ -118417,11 +118523,15 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 	constructor({ game, asset, level }) {
 		let x = Math.floor(Math.random() * (level.width - 2)) + 1;
 		let y = Math.floor(Math.random() * (level.height - 2)) + 1;
-		console.log("want to start at", x, y);
-		while (level.tilemap.getTile(x, y) != null) {
+		let count = 0;
+		while (level.tilemap.getTile(x, y).index != 1) {
 			x = Math.floor(Math.random() * (level.width - 2)) + 1;
 			y = Math.floor(Math.random() * (level.height - 2)) + 1;
-			console.log("trying again at", x, y);
+			count++;
+			if (count > 10) {
+				console.log("ERROR: Giving up finding space for enemy");
+				return null;
+			}
 		}
 
 		x = x * level.tilesize + level.tilesize / 2;
@@ -118458,7 +118568,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 		let last_resort = [];
 		let d = [];
 		let layer = this.level.tilemap.getLayer('level');
-		if (this.level.tilemap.getTile(tilex, tiley - 1, layer) == null) {
+		if (this.level.tilemap.getTile(tilex, tiley - 1, layer).index == 1) {
 			d = [0, -1 * this.v];
 			if (this.body.velocity.y == this.v) {
 				last_resort = d;
@@ -118466,7 +118576,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 				valid_directions.push(d);
 			}
 		}
-		if (this.level.tilemap.getTile(tilex, tiley + 1, layer) == null) {
+		if (this.level.tilemap.getTile(tilex, tiley + 1, layer).index == 1) {
 			d = [0, this.v];
 			if (this.body.velocity.y == -1 * this.v) {
 				last_resort = d;
@@ -118474,7 +118584,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 				valid_directions.push(d);
 			}
 		}
-		if (this.level.tilemap.getTile(tilex - 1, tiley, layer) == null) {
+		if (this.level.tilemap.getTile(tilex - 1, tiley, layer).index == 1) {
 			d = [-1 * this.v, 0];
 			if (this.body.velocity.x == this.v) {
 				last_resort = d;
@@ -118482,7 +118592,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 				valid_directions.push(d);
 			}
 		}
-		if (this.level.tilemap.getTile(tilex + 1, tiley, layer) == null) {
+		if (this.level.tilemap.getTile(tilex + 1, tiley, layer).index == 1) {
 			d = [this.v, 0];
 			if (this.body.velocity.x == -1 * this.v) {
 				last_resort = d;

@@ -29,6 +29,7 @@ export default class GameState extends Phaser.State {
             'player'
         );
         window.game.physics.arcade.enable(this.player);
+        this.player.body.bounce = 1;
 		window.game.camera.follow(this.player);
 
 		this.cursors = window.game.input.keyboard.createCursorKeys();
@@ -47,8 +48,8 @@ export default class GameState extends Phaser.State {
 	}
 
     update() {
-//		window.game.physics.arcade.collide(this.player,this.level.layer);
-		window.game.physics.arcade.collide(this.player,this.sentry);
+		window.game.physics.arcade.collide(this.player,this.level.layer);
+        window.game.physics.arcade.collide(this.player,this.sentries);
 		window.game.physics.arcade.collide(this.sentry,this.level.layer);
 
         this.player.body.velocity.x = 0;
