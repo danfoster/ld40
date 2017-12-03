@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 
 export default class Sentry extends Phaser.Sprite {
-	constructor({ game, asset, level}) {
+	constructor({ game, level}) {
+
 		let x = Math.floor(Math.random()*(level.width-2))+1;
 		let y = Math.floor(Math.random()*(level.height-2))+1;
 		let count = 0;
@@ -18,7 +19,7 @@ export default class Sentry extends Phaser.Sprite {
 		x = (x*level.tilesize)+(level.tilesize/2);
 		y = (y*level.tilesize)+(level.tilesize/2);
 
-		super(game, x, y, asset);
+		super(game, x, y, 'enemy');
 		this.anchor.setTo(0.5)
 		game.physics.arcade.enable(this)
 		this.body.immovable = true;
@@ -29,6 +30,12 @@ export default class Sentry extends Phaser.Sprite {
 		let newdir = this._pickDirection(this.prev_tilex,this.prev_tiley);
 		this.body.velocity.x = newdir[0];
 		this.body.velocity.y = newdir[1];
+		this.animations.play(newdir[2]);
+
+        this.animations.add('down', [0,1,2], 10, true);
+        this.animations.add('up', [9,10,11], 10, true);
+        this.animations.add('left', [6,7,8], 10, true);
+        this.animations.add('right', [3,4,5], 10, true);
 	}
 
 	update() {
@@ -47,6 +54,7 @@ export default class Sentry extends Phaser.Sprite {
 			let newdir = this._pickDirection(tilex,tiley);
 			this.body.velocity.x = newdir[0];
 			this.body.velocity.y = newdir[1];
+			this.animations.play(newdir[2]);
 		}
 
 	}
@@ -57,7 +65,7 @@ export default class Sentry extends Phaser.Sprite {
 		let d = [];
 		let layer = this.level.tilemap.getLayer('level');
 		if ( this.level.tilemap.getTile(tilex,tiley-1,layer).index ==  1) {
-			d = [0,-1*this.v];
+			d = [0,-1*this.v,'up'];
 			if (this.body.velocity.y == this.v) {
 				last_resort = d
 			} else {
@@ -65,7 +73,7 @@ export default class Sentry extends Phaser.Sprite {
 			}
 		}
 		if ( this.level.tilemap.getTile(tilex,tiley+1,layer).index == 1 ) {
-			d = [0,this.v];
+			d = [0,this.v,'down'];
 			if (this.body.velocity.y == -1 * this.v) {
 				last_resort = d
 			} else {
@@ -73,7 +81,7 @@ export default class Sentry extends Phaser.Sprite {
 			}
 		}
 		if ( this.level.tilemap.getTile(tilex-1,tiley,layer).index == 1 ) {
-			d = [-1*this.v,0];
+			d = [-1*this.v,0,'left'];
 			if (this.body.velocity.x == this.v) {
 				last_resort = d
 			} else {
@@ -81,7 +89,7 @@ export default class Sentry extends Phaser.Sprite {
 			}
 		}
 		if ( this.level.tilemap.getTile(tilex+1,tiley,layer).index == 1 ) {
-			d = [this.v,0];
+			d = [this.v,0,'right'];
 			if (this.body.velocity.x == -1 * this.v) {
 				last_resort = d
 			} else {

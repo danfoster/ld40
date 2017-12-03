@@ -118115,7 +118115,8 @@ process.umask = function() { return 0; };
 
 class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
     preload() {
-        window.game.load.spritesheet('player', 'assets/player.png', 16, 16);
+        window.game.load.spritesheet('player', 'assets/player.png', 16, 24);
+        window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
 
         this.level = new __WEBPACK_IMPORTED_MODULE_1_level__["a" /* default */]();
     }
@@ -118128,10 +118129,11 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
 
         this.player = window.game.add.sprite(this.level.startingpos.x * this.level.tilesize, this.level.startingpos.y * this.level.tilesize, 'player');
         this.player.animations.add('down', [0, 1, 2], 10, true);
-        this.player.animations.add('up', [0, 1, 2], 10, true);
-        this.player.animations.add('left', [0, 1, 2], 10, true);
-        this.player.animations.add('right', [0, 1, 2], 10, true);
+        this.player.animations.add('up', [9, 10, 11], 10, true);
+        this.player.animations.add('left', [6, 7, 8], 10, true);
+        this.player.animations.add('right', [3, 4, 5], 10, true);
         window.game.physics.arcade.enable(this.player);
+        this.player.body.setSize(16, 10, 0, 8);
         window.game.camera.follow(this.player);
 
         this.cursors = window.game.input.keyboard.createCursorKeys();
@@ -118140,8 +118142,7 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
         for (let i = 0; i < 10; i++) {
             let s = new __WEBPACK_IMPORTED_MODULE_2_sentry__["a" /* default */]({
                 game: window.game,
-                level: this.level,
-                asset: 'player'
+                level: this.level
             });
             window.game.add.existing(s);
             this.sentries.push(s);
@@ -118172,12 +118173,12 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
         if (this.cursors.up.isDown) {
             //  Move to the left
             this.player.body.velocity.y = -150;
-            this.player.animations.play('left');
+            this.player.animations.play('up');
             moving = true;
         } else if (this.cursors.down.isDown) {
             //  Move to the right
             this.player.body.velocity.y = 150;
-            this.player.animations.play('right');
+            this.player.animations.play('down');
             moving = true;
         }
 
@@ -118186,6 +118187,8 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
             this.player.frame = 1;
         }
     }
+
+    render() {}
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = GameState;
 
@@ -118537,7 +118540,8 @@ class Level {
 
 
 class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
-	constructor({ game, asset, level }) {
+	constructor({ game, level }) {
+
 		let x = Math.floor(Math.random() * (level.width - 2)) + 1;
 		let y = Math.floor(Math.random() * (level.height - 2)) + 1;
 		let count = 0;
@@ -118554,7 +118558,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 		x = x * level.tilesize + level.tilesize / 2;
 		y = y * level.tilesize + level.tilesize / 2;
 
-		super(game, x, y, asset);
+		super(game, x, y, 'enemy');
 		this.anchor.setTo(0.5);
 		game.physics.arcade.enable(this);
 		this.body.immovable = true;
@@ -118565,6 +118569,12 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 		let newdir = this._pickDirection(this.prev_tilex, this.prev_tiley);
 		this.body.velocity.x = newdir[0];
 		this.body.velocity.y = newdir[1];
+		this.animations.play(newdir[2]);
+
+		this.animations.add('down', [0, 1, 2], 10, true);
+		this.animations.add('up', [9, 10, 11], 10, true);
+		this.animations.add('left', [6, 7, 8], 10, true);
+		this.animations.add('right', [3, 4, 5], 10, true);
 	}
 
 	update() {
@@ -118577,6 +118587,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 			let newdir = this._pickDirection(tilex, tiley);
 			this.body.velocity.x = newdir[0];
 			this.body.velocity.y = newdir[1];
+			this.animations.play(newdir[2]);
 		}
 	}
 
@@ -118586,7 +118597,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 		let d = [];
 		let layer = this.level.tilemap.getLayer('level');
 		if (this.level.tilemap.getTile(tilex, tiley - 1, layer).index == 1) {
-			d = [0, -1 * this.v];
+			d = [0, -1 * this.v, 'up'];
 			if (this.body.velocity.y == this.v) {
 				last_resort = d;
 			} else {
@@ -118594,7 +118605,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 			}
 		}
 		if (this.level.tilemap.getTile(tilex, tiley + 1, layer).index == 1) {
-			d = [0, this.v];
+			d = [0, this.v, 'down'];
 			if (this.body.velocity.y == -1 * this.v) {
 				last_resort = d;
 			} else {
@@ -118602,7 +118613,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 			}
 		}
 		if (this.level.tilemap.getTile(tilex - 1, tiley, layer).index == 1) {
-			d = [-1 * this.v, 0];
+			d = [-1 * this.v, 0, 'left'];
 			if (this.body.velocity.x == this.v) {
 				last_resort = d;
 			} else {
@@ -118610,7 +118621,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 			}
 		}
 		if (this.level.tilemap.getTile(tilex + 1, tiley, layer).index == 1) {
-			d = [this.v, 0];
+			d = [this.v, 0, 'right'];
 			if (this.body.velocity.x == -1 * this.v) {
 				last_resort = d;
 			} else {

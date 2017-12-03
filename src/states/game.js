@@ -5,7 +5,8 @@ import Sentry from 'sentry';
 
 export default class GameState extends Phaser.State {
 	preload() {
-		window.game.load.spritesheet('player', 'assets/player.png', 16, 16);
+		window.game.load.spritesheet('player', 'assets/player.png', 16, 24);
+		window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
 
 		this.level = new Level;
 		
@@ -29,10 +30,11 @@ export default class GameState extends Phaser.State {
             'player'
         );
         this.player.animations.add('down', [0,1,2], 10, true);
-        this.player.animations.add('up', [0,1,2], 10, true);
-        this.player.animations.add('left', [0,1,2], 10, true);
-        this.player.animations.add('right', [0,1,2], 10, true);
+        this.player.animations.add('up', [9,10,11], 10, true);
+        this.player.animations.add('left', [6,7,8], 10, true);
+        this.player.animations.add('right', [3,4,5], 10, true);
         window.game.physics.arcade.enable(this.player);
+        this.player.body.setSize(16,10,0,8);
 		window.game.camera.follow(this.player);
 
 
@@ -43,7 +45,6 @@ export default class GameState extends Phaser.State {
             let s = new Sentry({
                 game: window.game,
                 level: this.level,
-                asset: 'player'
             });
             window.game.add.existing(s);
             this.sentries.push(s);
@@ -79,14 +80,14 @@ export default class GameState extends Phaser.State {
         {
             //  Move to the left
             this.player.body.velocity.y = -150;
-            this.player.animations.play('left');
+            this.player.animations.play('up');
             moving = true;
         }
         else if (this.cursors.down.isDown)
         {
             //  Move to the right
             this.player.body.velocity.y = 150;
-            this.player.animations.play('right');
+            this.player.animations.play('down');
             moving = true;
         }
 
@@ -94,5 +95,8 @@ export default class GameState extends Phaser.State {
             this.player.animations.stop();
             this.player.frame = 1;
         }
+    }
+
+    render() {
     }
 }
