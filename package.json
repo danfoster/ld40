@@ -21,7 +21,7 @@
   },
   "scripts": {
     "dev": "webpack",
-    "test": "node_modules/eslint/bin/eslint.js ./src/**/**.js"
+    "test": "node_modules/eslint/bin/eslint.js ./src/**.js"
   },
   "author": "Dan Foster",
   "license": "MIT"

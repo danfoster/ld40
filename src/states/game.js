@@ -168,10 +168,14 @@ export default class GameState extends Phaser.State {
 
 				if ( this.carrying > 0) {
 					this.sound.dropoff.play();
-					for (let i=0; i<5*this.carrying; i++) {
+					this.hud.healthbar.health += (this.carrying*10);
+					if (this.hud.healthbar.health > 100) {
+						this.hud.healthbar.health = 100;
+					}
+					for (let i=0; i<4*this.carrying; i++) {
 						let sid = Math.floor(Math.random()*this.sentries.length);
 						let s = this.sentries[sid];
-						this.sentries.splice[sid,1];
+						this.sentries.splice(sid,1);
 						s.destroy();
 					}
 				}
@@ -233,5 +237,6 @@ export default class GameState extends Phaser.State {
 	_win() {
 		this.game.state.start('Win');
 	}
+
 
 }

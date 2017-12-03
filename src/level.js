@@ -62,6 +62,11 @@ export default class Level {
 			}
 			
 		}
+
+		// Make some gaps so we get some loops
+		for (i=0;i<5;i++) {
+			this._makeGap();
+		}
 		
 
 
@@ -217,6 +222,34 @@ export default class Level {
 		}
 	}
 
+	_makeGap() {
+		let pos = {}
+		while (true) {
+			pos.x = Math.floor(Math.random()*(this.width-3))+1;
+			if (pos.x % 2 == 1) {
+				pos.x++;
+			}
+			pos.y = Math.floor(Math.random()*(this.height-3))+1;
+			if (pos.y % 1 == 0) {
+				pos.y++;
+			}
+
+			if (this.map[pos.x][pos.y] == 'w') {
+				if (
+					(this.map[pos.x-1][pos.y] == 'v' && this.map[pos.x+1][pos.y] == 'v' && this.map[pos.x][pos.y-1] == 'w' && this.map[pos.x][pos.y+1] == 'w') ||
+					(this.map[pos.x][pos.y-1] == 'v' && this.map[pos.x][pos.y+1] == 'v' && this.map[pos.x-1][pos.y] == 'w' && this.map[pos.x+1][pos.y] == 'w')
+				) {
+					this.map[pos.x][pos.y] = 'v';
+					console.log('making gap at:',pos);
+					return(null);
+				}
+			}
+
+
+		}
+	}
+		
+
 
 
 	createTilemap() {
@@ -231,7 +264,7 @@ export default class Level {
 
 		this.tilemap.addTilesetImage('tiles');
 		this.tilemap.setCollisionBetween(0,0);
-		this.tilemap.setCollisionBetween(2,16);
+		this.tilemap.setCollisionBetween(2,17);
 		this.tilemap.setCollision(50);
 
 		for (var x=0;x<this.width;x++) {
@@ -288,6 +321,9 @@ export default class Level {
                             this.tilemap.putTile(4,x,y, this.layer);
                             break;
                         case "vwvvwvvvv":
+                        case "wwvvwvvvv":
+                        case "vwwvwvvvv":
+                        case "wwwvwvvvv":
                             this.tilemap.putTile(5,x,y, this.layer);
                             break;
                         case "vwvvwwvvv":
@@ -297,9 +333,15 @@ export default class Level {
                             this.tilemap.putTile(7,x,y, this.layer);
                             break;
                         case "vvvvwwvvv":
+                        case "vvvvwwvvw":
+                        case "vvwvwwvvw":
+                        case "vvwvwwvvv":
                             this.tilemap.putTile(8,x,y, this.layer);
                             break;
                         case "vvvwwvvvv":
+                        case "wvvwwvvvv":
+                        case "vvvwwvwvv":
+                        case "wvvwwvwvv":
                             this.tilemap.putTile(9,x,y, this.layer);
                             break;
                         case "vvvwwwvwv":
@@ -325,6 +367,9 @@ export default class Level {
                             break;
                         case "vwvwwwvwv":
                             this.tilemap.putTile(16,x,y, this.layer);
+                            break;
+                        case "vvvvwvvvv":
+                            this.tilemap.putTile(17,x,y, this.layer);
                             break;
                         default:
                             this.tilemap.putTile(50,x,y, this.layer);

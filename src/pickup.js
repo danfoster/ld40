@@ -11,7 +11,7 @@ export default class Pickup extends Phaser.Sprite {
 			y = Math.floor(Math.random()*(level.height-2))+1;
 			count++;
 			if (count > 10) {
-				console.log("ERROR: Giving up finding space for enemy");
+				console.log('ERROR: Giving up finding space for enemy');
 				return(null);
 			}
 		}
@@ -20,11 +20,11 @@ export default class Pickup extends Phaser.Sprite {
 		y = (y*level.tilesize)+(level.tilesize/2);
 
 		super(game, x, y, 'pickup');
-		this.anchor.setTo(0.5)
-		game.physics.arcade.enable(this)
+		this.anchor.setTo(0.5);
+		game.physics.arcade.enable(this);
 		this.body.immovable = true;
 		this.level = level;
-        this.animations.add('spin', [0,1,2,3], 10, true);
+		this.animations.add('spin', [0,1,2,3], 10, true);
 		this.animations.play('spin');
 
 	}
