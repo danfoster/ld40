@@ -10,11 +10,12 @@ export default class GameState extends Phaser.State {
 		window.game.load.spritesheet('player', 'assets/player.png', 16, 24);
 		window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
 		window.game.load.spritesheet('pickup', 'assets/pickup.png', 9, 9);
+		window.game.load.spritesheet('dropoff', 'assets/dropoff.png', 48, 75);
 		window.game.load.bitmapFont('font4', 'assets/font4.png', 'assets/font4.fnt');
 
+		
 		this.level = new Level;
         this.playing = true;
-		
 	}
 
 
@@ -38,6 +39,15 @@ export default class GameState extends Phaser.State {
             window.game.add.existing(s);
             this.pickups.push(s);
         }
+
+		console.log("dropoffpos: ",this.level.dropoffpos);
+		this.dropoff = window.game.add.sprite(
+				(this.level.dropoffpos.x*this.level.tilesize)+(this.level.tilesize/2),
+				(this.level.dropoffpos.y*this.level.tilesize)+(this.level.tilesize/2),
+				'dropoff'
+		);
+		this.dropoff.anchor.setTo(0.5);
+		window.game.physics.arcade.enable(this.dropoff);
 
 		this.sentries = []
         for (let i=0; i<10; i++) {
@@ -95,8 +105,8 @@ export default class GameState extends Phaser.State {
 	}
 
     update() {
-		window.game.physics.arcade.collide(this.player,this.level.layer);
-		window.game.physics.arcade.collide(this.sentry,this.level.layer);
+			window.game.physics.arcade.collide(this.player,this.level.layer);
+			window.game.physics.arcade.collide(this.sentry,this.level.layer);
 
         if (this.playing) {
             this.player.body.velocity.x = 0;
@@ -132,6 +142,28 @@ export default class GameState extends Phaser.State {
 						window.game.add.existing(s);
 						this.sentries.push(s);
 					}
+				}
+			}
+
+			// Are we dropping off items?
+			if (window.game.physics.arcade.overlap(this.player,this.dropoff)) {
+
+				if ( this.carrying > 0) {
+					for (let i=0; i<5*this.carrying; i++) {
+						let sid = Math.floor(Math.random()*this.sentries.length);
+						let s = this.sentries[sid];
+						this.sentries.splice[sid,1];
+						s.destroy();
+					}
+				}
+				this.carrying=0;
+				this.hud.carrying.set(this.carrying);
+
+				// Check to see if we've won
+				if (this.pickups.length == 0) {
+					this.playing = false;
+					this.game.camera.onFadeComplete.addOnce(this._win,this);
+					this.game.camera.fade('#000000');
 				}
 			}
                 
@@ -176,6 +208,10 @@ export default class GameState extends Phaser.State {
 
 	_die() {
 		this.game.state.start('Dead');
+	}
+
+	_win() {
+		this.game.state.start('Win');
 	}
 
     render() {
