@@ -10678,6 +10678,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_phaser__ = __webpack_require__(/*! phaser */ 90);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_phaser__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_states_game__ = __webpack_require__(/*! states/game */ 335);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_states_dead__ = __webpack_require__(/*! states/dead */ 339);
+
 
 
 
@@ -10689,6 +10691,7 @@ class Game extends __WEBPACK_IMPORTED_MODULE_2_phaser___default.a.Game {
 		super(800, 600, __WEBPACK_IMPORTED_MODULE_2_phaser___default.a.AUTO, '');
 
 		this.state.add('Game', __WEBPACK_IMPORTED_MODULE_3_states_game__["a" /* default */]);
+		this.state.add('Dead', __WEBPACK_IMPORTED_MODULE_4_states_dead__["a" /* default */]);
 		this.state.start('Game');
 	}
 
@@ -118108,6 +118111,8 @@ process.umask = function() { return 0; };
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_phaser__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_level__ = __webpack_require__(/*! level */ 336);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_sentry__ = __webpack_require__(/*! sentry */ 337);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_hud__ = __webpack_require__(/*! hud */ 338);
+
 
 
 
@@ -118119,10 +118124,11 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
         window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
 
         this.level = new __WEBPACK_IMPORTED_MODULE_1_level__["a" /* default */]();
+        this.playing = true;
     }
 
     create() {
-        window.game.stage.backgroundColor = '#442200';
+        window.game.stage.backgroundColor = '#000000';
         window.game.physics.startSystem(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Physics.ARCADE);
         window.game.world.setBounds(0, 0, this.level.width * this.level.tilesize, this.level.height * this.level.tilesize);
         this.level.createTilemap();
@@ -118133,7 +118139,7 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
         this.player.animations.add('left', [6, 7, 8], 10, true);
         this.player.animations.add('right', [3, 4, 5], 10, true);
         window.game.physics.arcade.enable(this.player);
-        this.player.body.setSize(16, 10, 0, 8);
+        this.player.body.setSize(16, 10, 0, 14);
         window.game.camera.follow(this.player);
 
         this.cursors = window.game.input.keyboard.createCursorKeys();
@@ -118147,48 +118153,66 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
             window.game.add.existing(s);
             this.sentries.push(s);
         }
+
+        this.hud = new __WEBPACK_IMPORTED_MODULE_3_hud__["a" /* default */](window.game);
     }
 
     update() {
         window.game.physics.arcade.collide(this.player, this.level.layer);
-        window.game.physics.arcade.collide(this.player, this.sentries);
         window.game.physics.arcade.collide(this.sentry, this.level.layer);
 
-        this.player.body.velocity.x = 0;
-        this.player.body.velocity.y = 0;
-        let moving = false;
+        if (this.playing) {
+            this.player.body.velocity.x = 0;
+            this.player.body.velocity.y = 0;
+            let moving = false;
 
-        if (this.cursors.left.isDown) {
-            //  Move to the left
-            this.player.body.velocity.x = -150;
-            this.player.animations.play('left');
-            moving = true;
-        } else if (this.cursors.right.isDown) {
-            //  Move to the right
-            this.player.body.velocity.x = 150;
-            this.player.animations.play('right');
-            moving = true;
-        }
+            if (window.game.physics.arcade.overlap(this.player, this.sentries)) {
+                this.hud.healthbar.health -= 5;
+            }
+            if (this.hud.healthbar.health == 0) {
+                this.playing = false;
+                this.game.camera.onFadeComplete.addOnce(this._die, this);
+                this.game.camera.fade('#000000');
+            }
 
-        if (this.cursors.up.isDown) {
-            //  Move to the left
-            this.player.body.velocity.y = -150;
-            this.player.animations.play('up');
-            moving = true;
-        } else if (this.cursors.down.isDown) {
-            //  Move to the right
-            this.player.body.velocity.y = 150;
-            this.player.animations.play('down');
-            moving = true;
-        }
+            if (this.cursors.left.isDown) {
+                //  Move to the left
+                this.player.body.velocity.x = -150;
+                this.player.animations.play('left');
+                moving = true;
+            } else if (this.cursors.right.isDown) {
+                //  Move to the right
+                this.player.body.velocity.x = 150;
+                this.player.animations.play('right');
+                moving = true;
+            }
 
-        if (!moving) {
-            this.player.animations.stop();
-            this.player.frame = 1;
+            if (this.cursors.up.isDown) {
+                //  Move to the left
+                this.player.body.velocity.y = -150;
+                this.player.animations.play('up');
+                moving = true;
+            } else if (this.cursors.down.isDown) {
+                //  Move to the right
+                this.player.body.velocity.y = 150;
+                this.player.animations.play('down');
+                moving = true;
+            }
+
+            if (!moving) {
+                this.player.animations.stop();
+                this.player.frame = 1;
+            }
         }
     }
 
-    render() {}
+    _die() {
+        this.game.state.start('Dead');
+    }
+
+    render() {
+        //        game.debug.body(this.player);
+    }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = GameState;
 
@@ -118637,6 +118661,122 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 	}
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = Sentry;
+
+
+/***/ }),
+/* 338 */
+/*!********************!*\
+  !*** ./src/hud.js ***!
+  \********************/
+/*! exports provided: default */
+/*! exports used: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser__ = __webpack_require__(/*! phaser */ 90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_phaser__);
+
+
+class HUD extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Group {
+    constructor(game) {
+        super(game);
+        this.game = game;
+
+        this.healthbar = new HealthBar(game, 100, 10, 10, 10);
+    }
+
+    update() {}
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = HUD;
+
+
+class HealthBar extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Group {
+    constructor(game, width, height, x, y) {
+        super(game);
+        this.game = game;
+        this.health = 100;
+        this.prev_health = this.health;
+
+        var bmd = this.game.add.bitmapData(width, height);
+        bmd.ctx.fillStyle = "#484570";
+        bmd.ctx.rect(0, 0, width, height);
+        bmd.ctx.fill();
+        bmd.update();
+
+        this.healthborder = this.game.add.sprite(x, x, bmd);
+        this.healthborder.fixedToCamera = true;
+
+        var bmd = this.game.add.bitmapData(width, height);
+        bmd.ctx.fillStyle = "#a3a1a8";
+        bmd.ctx.rect(0, 0, width - 2, height - 2);
+        bmd.ctx.fill();
+        bmd.update();
+
+        this.healthbackground = this.game.add.sprite(x + 1, x + 1, bmd);
+        this.healthbackground.fixedToCamera = true;
+
+        var bmd = this.game.add.bitmapData(width, height);
+        bmd.ctx.fillStyle = "#991924";
+        bmd.ctx.rect(0, 0, (width - 2) * (this.health / 100), height - 2);
+        bmd.ctx.fill();
+        bmd.update();
+
+        this.healthbar = this.game.add.sprite(x + 1, x + 1, bmd);
+        this.healthbar.fixedToCamera = true;
+    }
+
+    update() {
+
+        if (this.health != this.prev_health) {
+            if (this.health < 0) {
+                this.health = 0;
+            }
+            this.healthbar.scale.x = this.health / 100;
+        }
+    }
+}
+
+/***/ }),
+/* 339 */
+/*!****************************!*\
+  !*** ./src/states/dead.js ***!
+  \****************************/
+/*! exports provided: default */
+/*! exports used: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser__ = __webpack_require__(/*! phaser */ 90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_phaser__);
+
+
+class DeadState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
+	preload() {
+		window.game.load.bitmapFont('font1', 'assets/font1.png', 'assets/font1.fnt');
+		window.game.load.bitmapFont('font2', 'assets/font2.png', 'assets/font2.fnt');
+		window.game.load.bitmapFont('font3', 'assets/font3.png', 'assets/font3.fnt');
+	}
+
+	create() {
+		window.game.stage.backgroundColor = '#000000';
+		this.title = game.add.bitmapText(this.game.width / 2, this.game.height * 0.25, 'font1', "You Are Dead", 64);
+		this.title.anchor.setTo(0.5, 0.5);
+
+		this.text1 = game.add.bitmapText(this.game.width / 2, this.game.height * 0.5, 'font3', 'Press any key to play again', 40);
+		this.text1.anchor.setTo(0.5, 0.5);
+
+		window.game.input.keyboard.onPressCallback = function (e) {
+			console.log("Play again");
+			this.game.camera.fade('#000000');
+			window.game.state.start('Game');
+			window.game.input.keyboard.onPressCallback = null;
+		};
+	}
+
+	update() {}
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = DeadState;
 
 
 /***/ })
