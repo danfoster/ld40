@@ -118111,7 +118111,9 @@ process.umask = function() { return 0; };
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_phaser__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_level__ = __webpack_require__(/*! level */ 336);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_sentry__ = __webpack_require__(/*! sentry */ 337);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_hud__ = __webpack_require__(/*! hud */ 338);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_pickup__ = __webpack_require__(/*! pickup */ 340);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_hud__ = __webpack_require__(/*! hud */ 338);
+
 
 
 
@@ -118122,6 +118124,8 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
     preload() {
         window.game.load.spritesheet('player', 'assets/player.png', 16, 24);
         window.game.load.spritesheet('enemy', 'assets/enemy.png', 16, 24);
+        window.game.load.spritesheet('pickup', 'assets/pickup.png', 9, 9);
+        window.game.load.bitmapFont('font4', 'assets/font4.png', 'assets/font4.fnt');
 
         this.level = new __WEBPACK_IMPORTED_MODULE_1_level__["a" /* default */]();
         this.playing = true;
@@ -118132,17 +118136,17 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
         window.game.physics.startSystem(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Physics.ARCADE);
         window.game.world.setBounds(0, 0, this.level.width * this.level.tilesize, this.level.height * this.level.tilesize);
         this.level.createTilemap();
+        this.carrying = 0;
 
-        this.player = window.game.add.sprite(this.level.startingpos.x * this.level.tilesize, this.level.startingpos.y * this.level.tilesize, 'player');
-        this.player.animations.add('down', [0, 1, 2], 10, true);
-        this.player.animations.add('up', [9, 10, 11], 10, true);
-        this.player.animations.add('left', [6, 7, 8], 10, true);
-        this.player.animations.add('right', [3, 4, 5], 10, true);
-        window.game.physics.arcade.enable(this.player);
-        this.player.body.setSize(16, 10, 0, 14);
-        window.game.camera.follow(this.player);
-
-        this.cursors = window.game.input.keyboard.createCursorKeys();
+        this.pickups = [];
+        for (let i = 0; i < 10; i++) {
+            let s = new __WEBPACK_IMPORTED_MODULE_3_pickup__["a" /* default */]({
+                game: window.game,
+                level: this.level
+            });
+            window.game.add.existing(s);
+            this.pickups.push(s);
+        }
 
         this.sentries = [];
         for (let i = 0; i < 10; i++) {
@@ -118154,7 +118158,40 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
             this.sentries.push(s);
         }
 
-        this.hud = new __WEBPACK_IMPORTED_MODULE_3_hud__["a" /* default */](window.game);
+        this.player = window.game.add.sprite(this.level.startingpos.x * this.level.tilesize, this.level.startingpos.y * this.level.tilesize, 'player');
+        this.player.animations.add('down', [0, 1, 2], 10, true);
+        this.player.animations.add('up', [9, 10, 11], 10, true);
+        this.player.animations.add('left', [6, 7, 8], 10, true);
+        this.player.animations.add('right', [3, 4, 5], 10, true);
+        window.game.physics.arcade.enable(this.player);
+        this.player.body.setSize(16, 10, 0, 14);
+        window.game.camera.follow(this.player);
+
+        this.cursors = window.game.input.keyboard.createCursorKeys();
+        this.spacebar = window.game.input.keyboard.addKey(__WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Keyboard.SPACEBAR);
+        this.spacebar.onDown.add(this.drop, this, 0);
+
+        this.hud = new __WEBPACK_IMPORTED_MODULE_4_hud__["a" /* default */](window.game);
+    }
+
+    drop() {
+        if (this.carrying > 0) {
+            this.carrying--;
+            for (let i = 0; i < 5; i++) {
+                let sid = Math.floor(Math.random() * this.sentries.length);
+                let s = this.sentries[sid];
+                this.sentries.splice[(sid, 1)];
+                s.destroy();
+            }
+            let p = new __WEBPACK_IMPORTED_MODULE_3_pickup__["a" /* default */]({
+                game: window.game,
+                level: this.level
+            });
+            window.game.add.existing(p);
+            this.pickups.push(p);
+            this.hud.remain.set(this.pickups.length);
+            this.hud.carrying.set(this.carrying);
+        }
     }
 
     update() {
@@ -118166,15 +118203,39 @@ class GameState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
             this.player.body.velocity.y = 0;
             let moving = false;
 
+            // Are we being hit by an enemy?
             if (window.game.physics.arcade.overlap(this.player, this.sentries)) {
                 this.hud.healthbar.health -= 5;
             }
+
+            // Are we dead?
             if (this.hud.healthbar.health == 0) {
                 this.playing = false;
                 this.game.camera.onFadeComplete.addOnce(this._die, this);
                 this.game.camera.fade('#000000');
             }
 
+            // Are we picking up an item?
+            for (let i = 0; i < this.pickups.length; i++) {
+                if (window.game.physics.arcade.overlap(this.player, this.pickups[i])) {
+                    let s = this.pickups[i];
+                    this.pickups.splice(i, 1);
+                    s.destroy();
+                    this.hud.remain.set(this.pickups.length);
+                    this.carrying += 1;
+                    this.hud.carrying.set(this.carrying);
+                    for (let i = 0; i < 5; i++) {
+                        let s = new __WEBPACK_IMPORTED_MODULE_2_sentry__["a" /* default */]({
+                            game: window.game,
+                            level: this.level
+                        });
+                        window.game.add.existing(s);
+                        this.sentries.push(s);
+                    }
+                }
+            }
+
+            // Keyboard movement
             if (this.cursors.left.isDown) {
                 //  Move to the left
                 this.player.body.velocity.x = -150;
@@ -118590,6 +118651,7 @@ class Sentry extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
 		this.prev_tilex = Math.floor(this.x / this.level.tilesize);
 		this.prev_tiley = Math.floor(this.y / this.level.tilesize);
 		this.v = 100;
+		console.log(this.v);
 		let newdir = this._pickDirection(this.prev_tilex, this.prev_tiley);
 		this.body.velocity.x = newdir[0];
 		this.body.velocity.y = newdir[1];
@@ -118683,6 +118745,8 @@ class HUD extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Group {
         this.game = game;
 
         this.healthbar = new HealthBar(game, 100, 10, 10, 10);
+        this.remain = new RemainCounter(game, 10, 25, game.state.getCurrentState().pickups.length);
+        this.carrying = new CarryingCounter(game, 10, 40, game.state.getCurrentState().carrying);
     }
 
     update() {}
@@ -118737,6 +118801,78 @@ class HealthBar extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Group {
     }
 }
 
+class RemainCounter extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Group {
+    constructor(game, x, y, num) {
+        super(game);
+        this.game = game;
+        this.count = num;
+
+        var bmd = this.game.add.bitmapData(40, 20);
+        bmd.ctx.fillStyle = "#484570";
+        bmd.ctx.alpha = 0.9;
+        bmd.ctx.rect(0, 0, 100, 16);
+        bmd.ctx.fill();
+        bmd.update();
+
+        this.border = this.game.add.sprite(x, y, bmd);
+        this.border.fixedToCamera = true;
+
+        var bmd = this.game.add.bitmapData(38, 20);
+        bmd.ctx.fillStyle = "#cdcdd1";
+        bmd.ctx.alpha = 0.9;
+        bmd.ctx.rect(0, 0, 98, 14);
+        bmd.ctx.fill();
+        bmd.update();
+
+        this.background = this.game.add.sprite(x + 1, y + 1, bmd);
+        this.background.fixedToCamera = true;
+
+        this.text = game.add.bitmapText(x + 2, y, 'font4', 'R: ' + this.count, 16);
+        this.text.fixedToCamera = true;
+    }
+
+    set(num) {
+        this.count = num;
+        this.text.setText('R: ' + this.count);
+    }
+}
+
+class CarryingCounter extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Group {
+    constructor(game, x, y, num) {
+        super(game);
+        this.game = game;
+        this.count = num;
+
+        var bmd = this.game.add.bitmapData(40, 20);
+        bmd.ctx.fillStyle = "#484570";
+        bmd.ctx.alpha = 0.9;
+        bmd.ctx.rect(0, 0, 100, 16);
+        bmd.ctx.fill();
+        bmd.update();
+
+        this.border = this.game.add.sprite(x, y, bmd);
+        this.border.fixedToCamera = true;
+
+        var bmd = this.game.add.bitmapData(38, 20);
+        bmd.ctx.fillStyle = "#cdcdd1";
+        bmd.ctx.alpha = 0.9;
+        bmd.ctx.rect(0, 0, 98, 14);
+        bmd.ctx.fill();
+        bmd.update();
+
+        this.background = this.game.add.sprite(x + 1, y + 1, bmd);
+        this.background.fixedToCamera = true;
+
+        this.text = game.add.bitmapText(x + 2, y, 'font4', 'C: ' + this.count, 16);
+        this.text.fixedToCamera = true;
+    }
+
+    set(num) {
+        this.count = num;
+        this.text.setText('C: ' + this.count);
+    }
+}
+
 /***/ }),
 /* 339 */
 /*!****************************!*\
@@ -118777,6 +118913,54 @@ class DeadState extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.State {
 	update() {}
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = DeadState;
+
+
+/***/ }),
+/* 340 */
+/*!***********************!*\
+  !*** ./src/pickup.js ***!
+  \***********************/
+/*! exports provided: default */
+/*! exports used: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser__ = __webpack_require__(/*! phaser */ 90);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_phaser___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_phaser__);
+
+
+class Pickup extends __WEBPACK_IMPORTED_MODULE_0_phaser___default.a.Sprite {
+	constructor({ game, level }) {
+
+		let x = Math.floor(Math.random() * (level.width - 2)) + 1;
+		let y = Math.floor(Math.random() * (level.height - 2)) + 1;
+		let count = 0;
+		while (level.tilemap.getTile(x, y).index != 1) {
+			x = Math.floor(Math.random() * (level.width - 2)) + 1;
+			y = Math.floor(Math.random() * (level.height - 2)) + 1;
+			count++;
+			if (count > 10) {
+				console.log("ERROR: Giving up finding space for enemy");
+				return null;
+			}
+		}
+
+		x = x * level.tilesize + level.tilesize / 2;
+		y = y * level.tilesize + level.tilesize / 2;
+
+		super(game, x, y, 'pickup');
+		this.anchor.setTo(0.5);
+		game.physics.arcade.enable(this);
+		this.body.immovable = true;
+		this.level = level;
+		this.animations.add('spin', [0, 1, 2, 3], 10, true);
+		this.animations.play('spin');
+	}
+
+	update() {}
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = Pickup;
 
 
 /***/ })
