@@ -30,9 +30,9 @@ export default class GameState extends Phaser.State {
 		window.game.stage.backgroundColor = '#000000';
 		window.game.physics.startSystem(Phaser.Physics.ARCADE);
 		window.game.world.setBounds(
-				0,0,
-				this.level.width * this.level.tilesize,
-				this.level.height * this.level.tilesize
+			0,0,
+			this.level.width * this.level.tilesize,
+			this.level.height * this.level.tilesize
 		);
 		this.level.createTilemap();
 		this.carrying = 0;
@@ -45,7 +45,7 @@ export default class GameState extends Phaser.State {
 		this.sound.win= window.game.add.audio('win');
 		this.sound.hurt= window.game.add.audio('hurt');
 
-		this.pickups = []
+		this.pickups = [];
 		for (let i=0; i<10; i++) {
 			let s = new Pickup({
 				game: window.game,
@@ -55,16 +55,15 @@ export default class GameState extends Phaser.State {
 			this.pickups.push(s);
 		}
 
-		console.log("dropoffpos: ",this.level.dropoffpos);
 		this.dropoff = window.game.add.sprite(
-				(this.level.dropoffpos.x*this.level.tilesize)+(this.level.tilesize/2),
-				(this.level.dropoffpos.y*this.level.tilesize)+(this.level.tilesize/2),
-				'dropoff'
+			(this.level.dropoffpos.x*this.level.tilesize)+(this.level.tilesize/2),
+			(this.level.dropoffpos.y*this.level.tilesize)+(this.level.tilesize/2),
+			'dropoff'
 		);
 		this.dropoff.anchor.setTo(0.5);
 		window.game.physics.arcade.enable(this.dropoff);
 
-		this.sentries = []
+		this.sentries = [];
 		for (let i=0; i<10; i++) {
 			let s = new Sentry({
 				game: window.game,
@@ -89,7 +88,7 @@ export default class GameState extends Phaser.State {
 
 
 		this.cursors = window.game.input.keyboard.createCursorKeys();
-		this.spacebar = window.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+		this.spacebar = window.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 		this.spacebar.onDown.add(this.drop, this, 0);
 
 		
@@ -121,8 +120,8 @@ export default class GameState extends Phaser.State {
 	}
 
 	update() {
-			window.game.physics.arcade.collide(this.player,this.level.layer);
-			window.game.physics.arcade.collide(this.sentry,this.level.layer);
+		window.game.physics.arcade.collide(this.player,this.level.layer);
+		window.game.physics.arcade.collide(this.sentry,this.level.layer);
 
 		if (this.playing) {
 			this.player.body.velocity.x = 0;
@@ -235,7 +234,4 @@ export default class GameState extends Phaser.State {
 		this.game.state.start('Win');
 	}
 
-	render() {
-//		game.debug.body(this.player);
-	}
 }

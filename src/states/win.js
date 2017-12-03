@@ -11,18 +11,17 @@ export default class WinState extends Phaser.State {
 
 	create() {
 		window.game.stage.backgroundColor = '#000000';
-		this.title = game.add.bitmapText(this.game.width/2, this.game.height*0.25, 'font1', "You Won!", 96);
+		this.title = window.game.add.bitmapText(this.game.width/2, this.game.height*0.25, 'font1', 'You Won!', 96);
 		this.title.anchor.setTo(0.5,0.5);
 
-		this.text1 = game.add.bitmapText(this.game.width/2, this.game.height*0.5, 'font3', 'Press Y to play again', 40);
+		this.text1 = window.game.add.bitmapText(this.game.width/2, this.game.height*0.5, 'font3', 'Press Y to play again', 40);
 		this.text1.anchor.setTo(0.5,0.5);
 
-		window.game.input.keyboard.onPressCallback = function(e) {
-			console.log("Play again");
+		window.game.input.keyboard.onPressCallback = function() {
 			this.game.camera.fade('#000000');
 			window.game.state.start('Game');
 			window.game.input.keyboard.onPressCallback = null;
-		}
+		};
 
 
 	}
